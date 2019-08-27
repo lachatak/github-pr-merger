@@ -30,6 +30,7 @@ if __name__ == "__main__":
     github_token = os.environ["GITHUB_TOKEN"]
     sess = create_session(github_token)
     event_data = json.load(open(event_path))
+    print(f"--- event_path: {event_path}")
     print(f"--- event_data: {event_data}")
 
     if hasattr(event_data, "check_run"):
