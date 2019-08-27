@@ -74,3 +74,6 @@ if __name__ == "__main__":
         # api_base_url = pr_data["base"]["repo"]["url"]
         # ref_url = f"{api_base_url}/git/refs/heads/{pr_ref}"
         # sess.delete(ref_url)
+    else:
+        print(f"*** No check_run!!")
+        sys.exit(78)
