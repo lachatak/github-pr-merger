@@ -5,6 +5,9 @@ LABEL "com.github.actions.description"="Merge and clean-up the pull request afte
 LABEL "com.github.actions.icon"="activity"
 LABEL "com.github.actions.color"="green"
 
+RUN pip install requests
+
 COPY merge_pr.py /
+
 ENTRYPOINT ["python3", "/merge_pr.py"]
 
