@@ -32,43 +32,44 @@ if __name__ == "__main__":
     event_data = json.load(open(event_path))
     print(f"--- event_data: {event_data}")
 
-    check_run = event_data["check_run"]
-    name = check_run["name"]
+    if hasattr(event_data, "check_run"):
+        check_run = event_data["check_run"]
+        name = check_run["name"]
 
-    if check_run["status"] != "completed":
-        print(f"*** Check run {name} has not completed")
+        if check_run["status"] != "completed":
+            print(f"*** Check run {name} has not completed")
+            sys.exit(78)
+
+        if check_run["conclusion"] != "success":
+            print(f"*** Check run {name} has not succeeded")
+            sys.exit(1)
+
+        assert len(check_run["pull_requests"]) == 1
+        pull_request = check_run["pull_requests"][0]
+        pr_number = pull_request["number"]
+        pr_src = pull_request["head"]["ref"]
+        pr_dst = pull_request["base"]["ref"]
+
+        print(f"*** Checking pull request #{pr_number}: {pr_src} ~> {pr_dst}")
+
+        pr_data = sess.get(pull_request["url"]).json()
+
+        pr_title = pr_data["title"]
+        print(f"*** Title of PR is {pr_title!r}")
+        if pr_title.startswith("[WIP] "):
+            print("*** This is a WIP PR, will not merge")
+            sys.exit(78)
+
+        pr_user = pr_data["user"]["login"]
+        print(f"*** This pull request was opened by {pr_user}")
         sys.exit(78)
 
-    if check_run["conclusion"] != "success":
-        print(f"*** Check run {name} has not succeeded")
-        sys.exit(1)
-
-    assert len(check_run["pull_requests"]) == 1
-    pull_request = check_run["pull_requests"][0]
-    pr_number = pull_request["number"]
-    pr_src = pull_request["head"]["ref"]
-    pr_dst = pull_request["base"]["ref"]
-
-    print(f"*** Checking pull request #{pr_number}: {pr_src} ~> {pr_dst}")
-
-    pr_data = sess.get(pull_request["url"]).json()
-
-    pr_title = pr_data["title"]
-    print(f"*** Title of PR is {pr_title!r}")
-    if pr_title.startswith("[WIP] "):
-        print("*** This is a WIP PR, will not merge")
-        sys.exit(78)
-
-    pr_user = pr_data["user"]["login"]
-    print(f"*** This pull request was opened by {pr_user}")
-    sys.exit(78)
-
-    print("*** This pull request is ready to be merged.")
-    # merge_url = pull_request["url"] + "/merge"
-    # sess.put(merge_url)
-    #
-    # print("*** Cleaning up pull request branch")
-    # pr_ref = pr_data["head"]["ref"]
-    # api_base_url = pr_data["base"]["repo"]["url"]
-    # ref_url = f"{api_base_url}/git/refs/heads/{pr_ref}"
-    # sess.delete(ref_url)
+        print("*** This pull request is ready to be merged.")
+        # merge_url = pull_request["url"] + "/merge"
+        # sess.put(merge_url)
+        #
+        # print("*** Cleaning up pull request branch")
+        # pr_ref = pr_data["head"]["ref"]
+        # api_base_url = pr_data["base"]["repo"]["url"]
+        # ref_url = f"{api_base_url}/git/refs/heads/{pr_ref}"
+        # sess.delete(ref_url)
